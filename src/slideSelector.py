@@ -77,9 +77,9 @@ else:
             annotation = FreehandAnnotation()
         else :
             annotation = CirclularAnnotation()
-        annotation.set_type(xmlannotation.get("type"))
-        annotation.set_color(xmlannotation.get("color"))
-        annotation.set_displayname(xmlannotation.get("displayname"))
+        annotation.type(xmlannotation.get("type"))
+        annotation.color(xmlannotation.get("color"))
+        annotation.displayname(xmlannotation.get("displayname"))
         annotation.set_element(xmlannotation)      
             
         ndpviewstate.set_title(xmlndpviewstate.find('title').text)

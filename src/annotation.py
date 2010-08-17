@@ -14,47 +14,17 @@ import ImageDraw
 
 class Annotation:
     
-    def __init__(self):
-        self.color = ""
-        self.type = ''
-        self.displayname = ''
-    
-    def set_color(self, color):
+    def __init__(self, color = '', type = '', displayname = '' ):
         self.color = color
-        
-    def get_color(self):
-        return self.color
-    
-    def set_type(self, displayname):
-        self.type = displayname
-        
-    def get_type(self):
-        return self.type
-    
-    def set_displayname(self, displayname):
+        self.type = type
         self.displayname = displayname
-        
-    def get_displayname(self):
-        return self.displayname
 
 class CirclularAnnotation(Annotation):
     
-    def __init__(self):
-        Annotation.__init__(self)
-        self.center = Point(0, 0)
-        self.radius = 0
-        
-    def set_center(self, center):
+    def __init__(self, color = '', type = '', displayname = '', center = None, radius = None):
+        Annotation.__init__(self,  color , type, displayname)
         self.center = center
-        
-    def get_center(self):
-        return self.center
-    
-    def set_radius(self, radius):
         self.radius = radius
-        
-    def get_radius(self):
-        return self.radius
     
     def set_element(self, xmlannotation):
         self.radius = float(xmlannotation.find("radius").text)
@@ -91,12 +61,6 @@ class FreehandAnnotation(Annotation):
         Annotation.__init__(self)
         self.x = []
         self.y = []
-        
-    def set_points(self, points):
-        self.points = points
-        
-    def get_points(self):
-        return self.points
     
     def set_element(self, xmlannotation):
         pointlist = xmlannotation.findall("pointlist/point")
