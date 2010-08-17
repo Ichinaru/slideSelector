@@ -36,20 +36,20 @@ def color(name):
     return color
 
 def save_image(im, foldersavename, ndpviewstate):
-    foldersavenamecolor = foldersavename+ '/' + ndpviewstate.get_annotation().get_color()
+    foldersavenamecolor = foldersavename+ '/' + ndpviewstate.annotation.color
     try:
         os.mkdir(foldersavenamecolor)
     except:
         pass
-    if (not(os.path.exists(foldersavenamecolor + '/' + ndpviewstate.get_title() + '.jpg'))):
-        filesavename =foldersavenamecolor + '/' + ndpviewstate.get_title() + '.jpg'
+    if (not(os.path.exists(foldersavenamecolor + '/' + ndpviewstate.title + '.jpg'))):
+        filesavename =foldersavenamecolor + '/' + ndpviewstate.title + '.jpg'
     else:
         i=1
         while (os.path.exists(foldersavenamecolor + '/' + 
-                              ndpviewstate.get_title() + 
+                              ndpviewstate.title + 
                               '(' + str(i) + ')' + '.jpg')):
             i+=1
-        filesavename = foldersavenamecolor + '/' + ndpviewstate.get_title()+ '(' + str(i) + ')' + '.jpg'
+        filesavename = foldersavenamecolor + '/' + ndpviewstate.title+ '(' + str(i) + ')' + '.jpg'
     im.save(filesavename, "JPEG")
  
 app = App()
@@ -77,15 +77,15 @@ else:
             annotation = FreehandAnnotation()
         else :
             annotation = CirclularAnnotation()
-        annotation.type(xmlannotation.get("type"))
-        annotation.color(xmlannotation.get("color"))
-        annotation.displayname(xmlannotation.get("displayname"))
+        annotation.type=xmlannotation.get("type")
+        annotation.color=xmlannotation.get("color")
+        annotation.displayname=xmlannotation.get("displayname")
         annotation.set_element(xmlannotation)      
             
-        ndpviewstate.set_title(xmlndpviewstate.find('title').text)
-        ndpviewstate.set_lens(float(xmlndpviewstate.find('lens').text))
-        ndpviewstate.set_z(float(xmlndpviewstate.find('z').text))
-        ndpviewstate.set_annotation(annotation) 
+        ndpviewstate.title=xmlndpviewstate.find('title').text
+        ndpviewstate.lens=float(xmlndpviewstate.find('lens').text)
+        ndpviewstate.z=float(xmlndpviewstate.find('z').text)
+        ndpviewstate.annotation=annotation 
         
         ndpviewstates.append(ndpviewstate)
     
@@ -103,27 +103,26 @@ else:
         pass
     
     for ndpviewstate in ndpviewstates:
-        if (ndpviewstate.get_annotation().get_color() == roi):
+        if (ndpviewstate.annotation.color == roi):
             # get the image
             imroi = ndpviewstate.image(ndpifilename)
-            roicenter, roiwidth, roiheight = ndpviewstate.get_annotation().center_size()
-            roicorner = (roicenter.get_x()-roiwidth/2, roicenter.get_x()+roiwidth/2, 
-                         roicenter.get_y()-roiheight/2, roicenter.get_y()+roiheight/2)
+            roicenter, roiwidth, roiheight = ndpviewstate.annotation.center_size()
+            roicorner = (roicenter.x-roiwidth/2, roicenter.x+roiwidth/2, 
+                         roicenter.y-roiheight/2, roicenter.y+roiheight/2)
             # remove rni of roi
             for other_ndpviewstate in ndpviewstates:
-                if (other_ndpviewstate.get_annotation().get_color() == rni):
-                    rnicenter, rniwidth, rniheight = other_ndpviewstate.get_annotation().center_size()
-                    if (rnicenter.get_x()>=roicorner[0] and rnicenter.get_x()<=roicorner[1] and
-                        rnicenter.get_y()>=roicorner[2] and rnicenter.get_y()<=roicorner[3]):
+                if (other_ndpviewstate.annotation.color == rni):
+                    rnicenter, rniwidth, rniheight = other_ndpviewstate.annotation.center_size()
+                    if (rnicenter.x>=roicorner[0] and rnicenter.x<=roicorner[1] and
+                        rnicenter.y>=roicorner[2] and rnicenter.y<=roicorner[3]):
                         print 'ok'
                         imrni = other_ndpviewstate.image(ndpifilename)
-                        physicaloffset = ( rnicenter.get_x()-roicenter.get_x()+(roiwidth - rniwidth)/2,
-                                          rnicenter.get_y()-roicenter.get_y() +(roiheight - rniheight)/2 )
+                        physicaloffset = ( rnicenter.x-roicenter.x+(roiwidth - rniwidth)/2,
+                                          rnicenter.y-roicenter.y +(roiheight - rniheight)/2 )
                         print 'physicaloffset', physicaloffset
                         pixoffset = []
                         hamaimage = HamamatsuImage(ndpifilename)
                         for item in physicaloffset:
-                            #pixoffset.append(int(hamaimage.GetSourceLens()*ndpviewstate.get_lens()/other_ndpviewstate.get_lens()*item/9200))
                             pixoffset.append(int(20*item/9200))
                         print 'pixoffset', pixoffset
                         pixrni = imrni.load()
