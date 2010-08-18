@@ -11,8 +11,8 @@ from enthought.traits.ui.menu import OKButton, CancelButton
 import Tkinter
 
 
-class App(HasTraits):
-    """ Camera object """
+class Interface(HasTraits):
+    """ Interface object """
 
     roi = Enum('green', 'black', 'red', 'yellow', 'white', 'pink', 'light blue', 'turquoise',
         desc="",
@@ -29,7 +29,6 @@ class App(HasTraits):
     def _browse_fired(self):
         master = Tkinter.Tk()
         master.withdraw() #hiding tkinter window
-        filename = ""
         filename = askopenfilename(title="Open file", filetypes=[("ndpa file",".ndpa")])
         self.filename = filename
 

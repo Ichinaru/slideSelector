@@ -48,20 +48,7 @@ for rni in colors:
                     if (rnicenter.x>=roicorner[0] and rnicenter.x<=roicorner[1] and
                         rnicenter.y>=roicorner[2] and rnicenter.y<=roicorner[3]):
                         imrni = other_ndpviewstate.image(ndpifilename)
-                        physicaloffset = ( rnicenter.x-roicenter.x+(roiwidth - rniwidth)/2,
-                                          rnicenter.y-roicenter.y +(roiheight - rniheight)/2 )
-                        pixoffset = []
-                        hamaimage = HamamatsuImage(ndpifilename)
-                        for item in physicaloffset:
-                            pixoffset.append(int(20*item/9200))
-                        print 'pixoffset', pixoffset
-                        pixrni = imrni.load()
-                        pixroi = imroi.load()
-                        for x in range(0, imrni.size[0]):
-                            for y in range (0, imrni.size[1]):
-                                if (pixrni[x, y] != (255, 255, 255)):
-                                    pixroi[x+pixoffset[0], y+pixoffset[1]] = (255, 255, 255)
+                        exclude_rni(imroi, roicenter, roiwidth, roiheight, imrni, rnicenter, rniwidth, rniheight)
                         save_image(imrni, foldersavename, other_ndpviewstate)
             
-        # save image
             save_image(imroi, foldersavename, ndpviewstate)

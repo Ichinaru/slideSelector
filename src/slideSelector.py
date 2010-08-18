@@ -68,13 +68,26 @@ def create_folder(filename):
     except:
         pass
     return foldersavename
+
+def exclude_rni(imroi, roicenter, roiwidth, roiheight, imrni, rnicenter, rniwidth, rniheight):
+    physicaloffset = ( rnicenter.x-roicenter.x+(roiwidth - rniwidth)/2,
+                       rnicenter.y-roicenter.y+(roiheight - rniheight)/2 )
+    pixoffset = []
+    for item in physicaloffset:
+        pixoffset.append(int(20*item/9200))
+    pixrni = imrni.load()
+    pixroi = imroi.load()
+    for x in range(0, imrni.size[0]):
+        for y in range (0, imrni.size[1]):
+            if (pixrni[x, y] != (255, 255, 255)):
+                pixroi[x+pixoffset[0], y+pixoffset[1]] = (255, 255, 255)
  
 if __name__ == '__main__':
-    app = App()
-    app.configure_traits()
-    filename = app.filename
-    roi = color(app.roi)
-    rni = color(app.rni)
+    interface = Interface()
+    interface.configure_traits()
+    filename = interface.filename
+    roi = color(interface.roi)
+    rni = color(interface.rni)
     print filename
     
     if filename == "":
@@ -96,31 +109,17 @@ if __name__ == '__main__':
         
         for ndpviewstate in ndpviewstates:
             if (ndpviewstate.annotation.color == roi):
-                # get the image
                 imroi = ndpviewstate.image(ndpifilename)
                 roicenter, roiwidth, roiheight = ndpviewstate.annotation.center_size()
                 roicorner = (roicenter.x-roiwidth/2, roicenter.x+roiwidth/2, 
                              roicenter.y-roiheight/2, roicenter.y+roiheight/2)
-                # remove rni of roi
                 for other_ndpviewstate in ndpviewstates:
                     if (other_ndpviewstate.annotation.color == rni):
                         rnicenter, rniwidth, rniheight = other_ndpviewstate.annotation.center_size()
                         if (rnicenter.x>=roicorner[0] and rnicenter.x<=roicorner[1] and
                             rnicenter.y>=roicorner[2] and rnicenter.y<=roicorner[3]):
                             imrni = other_ndpviewstate.image(ndpifilename)
-                            physicaloffset = ( rnicenter.x-roicenter.x+(roiwidth - rniwidth)/2,
-                                              rnicenter.y-roicenter.y +(roiheight - rniheight)/2 )
-                            pixoffset = []
-                            hamaimage = HamamatsuImage(ndpifilename)
-                            for item in physicaloffset:
-                                pixoffset.append(int(20*item/9200))
-                            pixrni = imrni.load()
-                            pixroi = imroi.load()
-                            for x in range(0, imrni.size[0]):
-                                for y in range (0, imrni.size[1]):
-                                    if (pixrni[x, y] != (255, 255, 255)):
-                                        pixroi[x+pixoffset[0], y+pixoffset[1]] = (255, 255, 255)
+                            exclude_rni(imroi, roicenter, roiwidth, roiheight, imrni, rnicenter, rniwidth, rniheight)
                             save_image(imrni, foldersavename, other_ndpviewstate)
                 
-            # save image
                 save_image(imroi, foldersavename, ndpviewstate)
