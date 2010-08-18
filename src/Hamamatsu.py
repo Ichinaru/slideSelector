@@ -14,8 +14,10 @@ os.environ['PATH'] = os.environ['PATH'] + ';' + os.path.abspath(os.path.dirname(
 # does not return any value.
 
 class HamamatsuImage:
-    """Hamamatsu image class.
-    """
+    """ Hamamatsu image class """
+    
+    _conversionfactor = 9200 # convert nm to pixels for a magnification of 1
+    
     def __init__(self, filename):
         """Arguments:
         filename: string with absolute file name.
@@ -31,8 +33,8 @@ class HamamatsuImage:
         z_plan: long with the physical Z (focal) pos of the desired image in nm.
         magnification: long with the objective magnification.
         """
-        width = int(magnification*physical_width/9200)+1
-        height = int(magnification*physical_height/9200)+1
+        width = int(magnification*physical_width/HamamatsuImage._conversionfactor)+1
+        height = int(magnification*physical_height/HamamatsuImage._conversionfactor)+1
         if os.path.exists(self.filename):
             return HamaWrapper.getImageData(self.filename, width, height,x_center,y_center, z_plan, magnification)
         else:
@@ -155,8 +157,8 @@ class HamamatsuImage:
         z_plan: long with the physical Z (focal) pos of the desired image in nm.
         magnification: long with the objective magnification.
         """
-        width = int(magnification*physical_width/9200)+1
-        height = int(magnification*physical_height/9200)+1
+        width = int(magnification*physical_width/HamamatsuImage._conversionfactor)+1
+        height = int(magnification*physical_height/HamamatsuImage._conversionfactor)+1
         if os.path.exists(self.filename):
             arr=HamaWrapper.getImageData(self.filename,width, height,x_coord,y_coord,z_depth, magnification)
             im=Image.frombuffer("RGB",(arr.shape[2],arr.shape[1]),arr.data)

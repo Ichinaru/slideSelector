@@ -28,32 +28,30 @@ class CirclularAnnotation(Annotation):
     
     def set_element(self, xmlannotation):
         self.radius = float(xmlannotation.find("radius").text)
-        self.center.set_x(int(xmlannotation.find("x").text))
-        self.center.set_y(int(xmlannotation.find("y").text))
+        self.center = Point(int(xmlannotation.find("x").text),int(xmlannotation.find("y").text))
         
-    # return de center and the size of the image .ndpi in nm
     def center_size(self):
+        """ return de center and the size of the image .ndpi in nm """
         return self.center, 2*self.radius, 2*self.radius
     
-    # remove outside pixels
     def contour(self, im, lens):
+        """ set pixels outside the contour to white """
         pix = im.load()
-        radius = self.radius*lens/9200
-        print radius
+        radius = self.radius*lens/HamamatsuImage._conversionfactor
+        coordradius = Point (radius, radius)
         for y in range (0, im.size[0]):
-            x = 0
-            while (sqrt((x-radius)**2+(y-radius)**2)>radius and x<im.size[1]):
-                pix [x, y] = (255, 255, 255)
-                x = x + 1
-            x = im.size[1]-1
-            while (sqrt((x-radius)**2+(y-radius)**2)>radius and x>=0):
-                pix [x, y] = (255, 255, 255)
-                x = x - 1
+            coordpoint = Point (0, y)
+            while (coordpoint.distance(coordradius)>radius and coordpoint.x<im.size[1]):
+                pix [coordpoint.x, coordpoint.y] = (255, 255, 255)
+                coordpoint.x += 1
+            coordpoint.x = im.size[1]-1
+            while (coordpoint.distance(coordradius)>radius and coordpoint.x>=0):
+                pix [coordpoint.x, coordpoint.y] = (255, 255, 255)
+                coordpoint.x -= 1
         return im
         
     def print_element(self):
         print self.radius, self.center
-    
 
 class FreehandAnnotation(Annotation):
     
@@ -72,8 +70,8 @@ class FreehandAnnotation(Annotation):
         for i in range (0, len(self.x)):
             print self.x[i], self.y[i]
     
-    # return de center and the size of the image .ndpi in nm
     def center_size(self):
+        """ return de center and the size of the image .ndpi in nm """
         xmin = min(self.x)
         xmax = max(self.x)
         ymax = max(self.y)
@@ -81,72 +79,67 @@ class FreehandAnnotation(Annotation):
         center = Point((xmax+xmin)/2, (ymax+ymin)/2)
         return center, xmax-xmin, ymax-ymin
     
-    # remove outside pixels
     def contour(self, im, lens):
-        #remove outside pixels
+        """ set pixels outside the contour to white """
         if (self.displayname != 'Rectangular Annotation'):
-            #drawing contour
             draw = ImageDraw.Draw(im)
-            line = []
-            xmin = min(self.x)
-            ymin = min(self.y)
-            for i in range (0, len(self.x)):
-                xpix = (self.x[i]-xmin)*lens/9200
-                ypix = (self.y[i]-ymin)*lens/9200
-                line.append((int(xpix), int(ypix)))
-            xpix = (self.x[0]-xmin)*lens/9200
-            ypix = (self.y[0]-ymin)*lens/9200
-            line.append((int(xpix), int(ypix)))
-            draw.line(line , fill=(255, 255, 255))
-            newim= new('RGB', (im.size[0]+2, im.size[1]+2), (0, 0, 0))
-            line.pop()
-            newim.paste(im, (1,1))
-            newim2= new('RGB', (im.size[0]+4, im.size[1]+4), (255, 255, 255))
-            newim2.paste(newim, (1,1))
+            lines = self.__contour_lines(lens)
+            draw.line(lines , fill=(255, 255, 255))
+            blackborderim = self.__border_lines(im, (0, 0, 0))
+            whiteborderim= self.__border_lines(blackborderim, (255, 255, 255))
             pixels =[]
             pixels.append((1,1))
-            im = self.flood_fill(pixels, newim2)
-
+            im = self.flood_fill(pixels, whiteborderim)
         return im
-            
+    
+    def __border_lines(self, im, color):
+        newim= new('RGB', (im.size[0]+2, im.size[1]+2), color)
+        newim.paste(im, (1,1))
+        return newim
+    
+    def __contour_lines(self, lens):
+        lines = []
+        xmin = min(self.x)
+        ymin = min(self.y)
+        for i in range (0, len(self.x)):
+            xpix = (self.x[i]-xmin)*lens/HamamatsuImage._conversionfactor
+            ypix = (self.y[i]-ymin)*lens/HamamatsuImage._conversionfactor
+            lines.append((int(xpix), int(ypix)))
+        xpix = (self.x[0]-xmin)*lens/HamamatsuImage._conversionfactor
+        ypix = (self.y[0]-ymin)*lens/HamamatsuImage._conversionfactor
+        lines.append((int(xpix), int(ypix)))
+        return lines
+    
+    def __check_west_or_east_side(self, pix, initpoint, direction):
+        point = initpoint
+        while (pix[point[0], point[1]] != (255, 255, 255)):
+            pix[point[0], point[1]] = (255, 255, 255)
+            point = (point[0]+direction, point[1])
+        return point
+    
+    def __check_up_or_down_side(self, w, e, pix, direction, pixels):
+        lastpixexist = False
+        for p in range (w[0]+1, e[0]):
+            if (pix[p, w[1]+direction] != (255, 255, 255)):
+                lastpix = (p, w[1]+direction)
+                lastpixexist = True
+            else:
+                if(lastpixexist):
+                    if (pixels[-1]!=lastpix):
+                        pixels.append(lastpix)
+        if(lastpixexist):
+            if (pixels[-1]!=lastpix):
+                pixels.append(lastpix)
+           
     def flood_fill(self, pixels, im):
         pix = im.load()
         print 'processing... (maybe go to take a coffee)'
         for pixel in pixels:
             if (pix[pixel[0], pixel[1]] != (255, 255, 255)):
-                w = pixel
-                e = pixel
-                while (pix[w[0], w[1]] != (255, 255, 255)):
-                    pix[w[0], w[1]] = (255, 255, 255)
-                    w = (w[0]-1, w[1])
-                e = (e[0]+1, e[1])
-                while (pix[e[0], e[1]] != (255, 255, 255)):
-                    pix[e[0], e[1]] = (255, 255, 255)
-                    e = (e[0]+1, e[1])
-                lastpixexist = False
-                for p in range (w[0]+1, e[0]):
-                    if (pix[p, w[1]+1] != (255, 255, 255)):
-                        lastpix = (p, w[1]+1)
-                        lastpixexist = True
-                    else:
-                        if(lastpixexist):
-                            if (pixels[-1]!=lastpix):
-                                pixels.append(lastpix)
-                if(lastpixexist):
-                    if (pixels[-1]!=lastpix):
-                        pixels.append(lastpix)
-                
-                for p in range (w[0]+1, e[0]):
-                    if (pix[p, w[1]-1] != (255, 255, 255)):
-                        lastpix = (p, w[1]-1)
-                        lastpixexist = True
-                    else:
-                        if(lastpixexist):
-                            if (pixels[-1]!=lastpix):
-                                pixels.append(lastpix)
-                if(lastpixexist):
-                    if (pixels[-1]!=lastpix):
-                        pixels.append(lastpix)
+                w = self.__check_west_or_east_side(pix, pixel, -1)
+                e = self.__check_west_or_east_side(pix, (pixel[0]+1,pixel[1]), 1)
+                self.__check_up_or_down_side(w, e, pix, 1, pixels)
+                self.__check_up_or_down_side(w, e, pix, -1, pixels)               
         print 'done'
         return im
     

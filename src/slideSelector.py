@@ -54,19 +54,15 @@ def save_image(im, foldersavename, ndpviewstate):
 
 def remove_extension(filename):
     """ return the file name without the extension"""
-    filepart = filename.split('.')
-    newfilename = filepart[0]
-    for i in range (1, len(filepart)-1):
-        newfilename = newfilename + '.' + filepart[i]
-    return newfilename
+    return os.path.splitext(filename)[0]
 
 def create_folder(filename):
     """ create a directory with the same name of the filename without the file extension """
-    foldersavename = remove_extension(remove_extension(filename))
+    foldersavename = remove_extension(remove_extension(filename)) # remove .ndpa then .npdi
     try:
         os.mkdir(foldersavename)
     except:
-        pass
+        pass # raise IOError('File not found') - file not found? is trying to create a directory
     return foldersavename
 
 def exclude_rni(imroi, roicenter, roiwidth, roiheight, imrni, rnicenter, rniwidth, rniheight):
@@ -74,7 +70,7 @@ def exclude_rni(imroi, roicenter, roiwidth, roiheight, imrni, rnicenter, rniwidt
                        rnicenter.y-roicenter.y+(roiheight - rniheight)/2 )
     pixoffset = []
     for item in physicaloffset:
-        pixoffset.append(int(20*item/9200))
+        pixoffset.append(int(20*item/HamamatsuImage._conversionfactor))
     pixrni = imrni.load()
     pixroi = imroi.load()
     for x in range(0, imrni.size[0]):
@@ -88,10 +84,9 @@ if __name__ == '__main__':
     filename = interface.filename
     roi = color(interface.roi)
     rni = color(interface.rni)
-    print filename
     
     if filename == "":
-        print "you didn't choose a file"
+        raise IOError('File not found')
     
     else:
         # parsing xml 
