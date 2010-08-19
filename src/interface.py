@@ -18,7 +18,7 @@ class Interface(HasTraits):
         desc="",
         label="region a analyser", )
 
-    rni = Enum('red', 'green', 'black', 'yellow', 'white', 'pink', 'light blue', 'turquoise',
+    roni = Enum('red', 'green', 'black', 'yellow', 'white', 'pink', 'light blue', 'turquoise',
         desc="",
         label="region a exclure", )
     
@@ -32,4 +32,4 @@ class Interface(HasTraits):
         filename = askopenfilename(title="Open file", filetypes=[("ndpa file",".ndpa")])
         self.filename = filename
 
-    view = View('roi', 'rni', Item('filename', show_label=False ), Item('browse', show_label=False ), buttons = [OKButton, CancelButton])
+    view = View('roi', 'roni', Item('filename', show_label=False ), Item('browse', show_label=False ), buttons = [OKButton, CancelButton])
