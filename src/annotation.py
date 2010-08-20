@@ -5,26 +5,30 @@ Created on 9 août 2010
 @author: Frederic Morel
 """
 
-from lxml import etree
-from point import *
+from point import Point
 from Hamamatsu import *
 from math import *
 from Image import *
 import ImageDraw
 
-class Annotation:
-    
-    def __init__(self, color = '', type = '', displayname = '' ):
-        self.color = color
-        self.type = type
-        self.displayname = displayname
+class Annotation(object):
+    color = ''
+    type = ''
+    displayname = ''
+
+    def __init__(self, **kwargs):
+        for k in kwargs:
+            if k in ['color', 'type', 'displayname']:
+                self.__setattr__(k,kwargs[k])
 
 class CirclularAnnotation(Annotation):
-    
-    def __init__(self, color = '', type = '', displayname = '', center = None, radius = None):
-        Annotation.__init__(self,  color , type, displayname)
-        self.center = center
-        self.radius = radius
+    center = None
+    radius = None
+
+    def __init__(self, **kwargs):
+        super(CirclularAnnotation, self).__init__(**kwargs)
+        self.center = kwargs['center']
+        self.radius = kwargs['radius']
     
     def set_element(self, xmlannotation):
         self.radius = float(xmlannotation.find("radius").text)
@@ -37,7 +41,7 @@ class CirclularAnnotation(Annotation):
     def contour(self, im, lens):
         """ set pixels outside the contour to white """
         pix = im.load()
-        radius = self.radius*lens/HamamatsuImage._conversionfactor
+        radius = self.radius*lens/CONV_FACT
         coordradius = Point (radius, radius)
         for y in range (0, im.size[0]):
             coordpoint = Point (0, y)
@@ -56,7 +60,7 @@ class CirclularAnnotation(Annotation):
 class FreehandAnnotation(Annotation):
     
     def __init__(self):
-        Annotation.__init__(self)
+        super(FreehandAnnotation, self).__init__()
         self.x = []
         self.y = []
     
@@ -67,16 +71,15 @@ class FreehandAnnotation(Annotation):
             self.y.append(int(point.find('y').text))
     
     def print_element(self):
-        for i in range (0, len(self.x)):
-            print self.x[i], self.y[i]
-    
+        print '\n'.join([str(el) for el in zip(self.x, self.y)])
+
     def center_size(self):
         """ return de center and the size of the image .ndpi in nm """
-        xmin = min(self.x)
-        xmax = max(self.x)
-        ymax = max(self.y)
-        ymin = min(self.y)
-        center = Point((xmax+xmin)/2, (ymax+ymin)/2)
+        xmin = min(x)
+        xmax = max(x)
+        ymin = min(y)
+        ymax = max(y)
+        center = Point(xmax+xmin/2, ymax+ymin/2)
         return center, xmax-xmin, ymax-ymin
     
     def contour(self, im, lens):
@@ -102,11 +105,11 @@ class FreehandAnnotation(Annotation):
         xmin = min(self.x)
         ymin = min(self.y)
         for i in range (0, len(self.x)):
-            xpix = (self.x[i]-xmin)*lens/HamamatsuImage._conversionfactor
-            ypix = (self.y[i]-ymin)*lens/HamamatsuImage._conversionfactor
+            xpix = (self.x[i]-xmin)*lens/CONV_FACT
+            ypix = (self.y[i]-ymin)*lens/CONV_FACT
             lines.append((int(xpix), int(ypix)))
-        xpix = (self.x[0]-xmin)*lens/HamamatsuImage._conversionfactor
-        ypix = (self.y[0]-ymin)*lens/HamamatsuImage._conversionfactor
+        xpix = (self.x[0]-xmin)*lens/CONV_FACT
+        ypix = (self.y[0]-ymin)*lens/CONV_FACT
         lines.append((int(xpix), int(ypix)))
         return lines
     

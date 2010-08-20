@@ -4,7 +4,7 @@ Created on 9 août 2010
 
 @author: Frederic Morel
 """
-from math import *
+from math import sqrt
 
 class Point:
     

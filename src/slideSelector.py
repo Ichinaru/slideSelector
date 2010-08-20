@@ -70,7 +70,7 @@ def exclude_rni(imroi, roicenter, roiwidth, roiheight, imrni, rnicenter, rniwidt
                        rnicenter.y-roicenter.y+(roiheight - rniheight)/2 )
     pixoffset = []
     for item in physicaloffset:
-        pixoffset.append(int(20*item/HamamatsuImage._conversionfactor))
+        pixoffset.append(int(20*item/CONV_FACT))
     pixrni = imrni.load()
     pixroi = imroi.load()
     for x in range(0, imrni.size[0]):
