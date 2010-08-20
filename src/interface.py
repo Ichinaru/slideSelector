@@ -9,13 +9,15 @@ from enthought.traits.ui.api import  View, Item
 from enthought.traits.ui.menu import OKButton, CancelButton
 
 
+
 class Interface(HasTraits):
     """ Interface object """
 
     roi = Enum('green', 'black', 'red', 'yellow', 'white', 'pink', 'light blue', 'turquoise',
         desc="",
         label="region a analyser", )
-    rni = Enum('red', 'green', 'black', 'yellow', 'white', 'pink', 'light blue', 'turquoise',
+
+    roni = Enum('red', 'green', 'black', 'yellow', 'white', 'pink', 'light blue', 'turquoise',
         desc="",
         label="region a exclure", )
     
