@@ -15,8 +15,12 @@ from Hamamatsu import *
 import os
 from interface import *
 
-# change color name to color hexadecimal
+
 def color(name):
+    """ change color name to color hexadecimal
+    Arguments:
+    name: string with the color name
+    """
     if (name == 'green'):
         color = '#00ff00'
     elif (name == 'red'):
@@ -36,6 +40,12 @@ def color(name):
     return color
 
 def save_image(im, foldersavename, ndpviewstate):
+    """ save the image in a directory in the foldersavename
+    Arguments:
+    im: PIL image 
+    foldersavename: string with absolute folder name.
+    ndpviewstate: Ndpviewstate instance
+    """
     foldersavenamecolor = foldersavename+ '/' + ndpviewstate.annotation.color
     try:
         os.mkdir(foldersavenamecolor)
@@ -53,11 +63,17 @@ def save_image(im, foldersavename, ndpviewstate):
     im.save(filesavename, "JPEG")
 
 def remove_extension(filename):
-    """ return the file name without the extension"""
+    """ return the file name without the extension
+    Arguments:
+    filename: string with absolute file name.
+    """
     return os.path.splitext(filename)[0]
 
 def create_folder(filename):
-    """ create a directory with the same name of the filename without the file extension """
+    """ create a directory with the same name of the filename without the file extension 
+    Arguments:
+    filename: string with absolute file name.
+    """
     foldersavename = remove_extension(remove_extension(filename)) # remove .ndpa then .npdi
     try:
         os.mkdir(foldersavename)
@@ -66,6 +82,17 @@ def create_folder(filename):
     return foldersavename
 
 def exclude_rni(imroi, roicenter, roiwidth, roiheight, imrni, rnicenter, rniwidth, rniheight):
+    """ remove the region of not-interest
+    Arguments:
+    imroi: PIL image with the region of interest (ROI)
+    roicenter: Point instance with the physical center of the ROI
+    roiwidth: float with the physical of the ROI
+    roiheight: float with the physical of the ROI
+    imrni: PIL image with the region of non-interest (RONI)
+    rnicenter: Point instance with the physical center of the RONI
+    rniwidth: float with the physical of the RONI
+    rniheight: float with the physical of the RONI
+    """
     physicaloffset = ( rnicenter.x-roicenter.x+(roiwidth - rniwidth)/2,
                        rnicenter.y-roicenter.y+(roiheight - rniheight)/2 )
     pixoffset = []
@@ -83,7 +110,7 @@ if __name__ == '__main__':
     interface.configure_traits()
     filename = interface.filename
     roi = color(interface.roi)
-    rni = color(interface.rni)
+    rni = color(interface.roni)
     
     if filename == "":
         raise IOError('File not found')

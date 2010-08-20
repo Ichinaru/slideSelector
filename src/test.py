@@ -2,7 +2,7 @@
 """
 Created on 17 août 2010
 
-@author: Administrator
+@author: Frederic Morel
 """
 from annotation import *
 from lxml import etree
