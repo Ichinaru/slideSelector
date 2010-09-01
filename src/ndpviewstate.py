@@ -29,9 +29,9 @@ class Ndpviewstate:
             
         self.title=xmlndpviewstate.find('title').text
         self.lens=float(xmlndpviewstate.find('lens').text)
-        self.z=float(xmlndpviewstate.find('z').text)
+        self.z=int(xmlndpviewstate.find('z').text)
     
-    def image(self, ndpifilename):
+    def image(self, ndpifilename, magnification):
         """
         return a PIL image corresponding to the annotation in the ndpviewstate element 
         Arguments:
@@ -39,10 +39,11 @@ class Ndpviewstate:
         """
         hamaimage = HamamatsuImage(ndpifilename)
         center, width, height = self.annotation.center_size()
+        print width, height
         print '------'
         im = hamaimage.GetImageNm(width, height, center.x, center.y,
-                                   int(self.z), 20) #hamaimage.GetSourceLens())
+                                   self.z, magnification) #hamaimage.GetSourceLens())
         print '------'
-        im=self.annotation.contour(im, 20) #hamaimage.GetSourceLens())
+        im=self.annotation.contour(im, magnification, hamaimage) #hamaimage.GetSourceLens())
         return im
                           

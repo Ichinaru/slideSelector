@@ -13,8 +13,6 @@ os.environ['PATH'] = os.environ['PATH'] + ';' + os.path.abspath(os.path.dirname(
 # Function whose name starts with Show means they will attempt to show the image on the screen after retrieving it from the file. These functions
 # does not return any value.
 
-CONV_FACT = 9200 # convert nm to pixels for a magnification of 1
-
 class HamamatsuImage:
     """ Hamamatsu image class """
 
@@ -23,6 +21,11 @@ class HamamatsuImage:
         filename: string with absolute file name.
         """
         self.filename = filename
+        im = Image.open(filename)
+        x = im.tag.get(282)[0][0]
+        y = im.tag.get(283)[0][0]
+        self.CONV_FACT = ((1./x+1./y)/2)*self.GetSourceLens()*10**7
+        print 'conv_fact', self.CONV_FACT
         
     def GetImageDataNm(self, physical_width, physical_height,x_center,y_center, z_plan, magnification):
         """Arguments:
@@ -33,8 +36,8 @@ class HamamatsuImage:
         z_plan: long with the physical Z (focal) pos of the desired image in nm.
         magnification: long with the objective magnification.
         """
-        width = int(magnification*physical_width/CONV_FACT)+1
-        height = int(magnification*physical_height/CONV_FACT)+1
+        width = round(magnification*physical_width/self.CONV_FACT)+1
+        height = round(magnification*physical_height/self.CONV_FACT)+1
         if os.path.exists(self.filename):
             return HamaWrapper.getImageData(self.filename, width, height,x_center,y_center, z_plan, magnification)
         else:
@@ -157,8 +160,8 @@ class HamamatsuImage:
         z_plan: long with the physical Z (focal) pos of the desired image in nm.
         magnification: long with the objective magnification.
         """
-        width = int(magnification*physical_width/CONV_FACT)+1
-        height = int(magnification*physical_height/CONV_FACT)+1
+        width = round(1.0*magnification*physical_width/self.CONV_FACT)+1
+        height = round(1.0*magnification*physical_height/self.CONV_FACT)+1
         if os.path.exists(self.filename):
             arr=HamaWrapper.getImageData(self.filename,width, height,x_coord,y_coord,z_depth, magnification)
             im=Image.frombuffer("RGB",(arr.shape[2],arr.shape[1]),arr.data)

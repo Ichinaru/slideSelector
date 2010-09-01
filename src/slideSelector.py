@@ -9,34 +9,32 @@ from lxml import etree
 from ndpviewstate import *
 from annotation import *
 from point import *
-from Tkinter import *
-import tkFileDialog
 from Hamamatsu import *
 import os
 from interface import *
 
 
 def color(name):
-    """ change color name to color hexadecimal
+    """ change color hexadecimal to color string name
     Arguments:
     name: string with the color name
     """
-    if (name == 'green'):
-        color = '#00ff00'
-    elif (name == 'red'):
-        color = '#ff0000'
-    elif (name == 'white'):
-        color = '#ffffff'
-    elif (name == 'yellow'):
-        color = '#ffff00'
-    elif (name == 'pink'):
-        color = '#ff00ff'
-    elif (name == 'light blue'):
-        color= '#0000ff'
-    elif (name == 'turquoise'):
-        color= '#00ffff'
+    if (name == '#00ff00'):
+        color = 'green'
+    elif (name == '#ff0000'):
+        color = 'red'
+    elif (name == '#ffffff'):
+        color = 'white'
+    elif (name == '#ffff00'):
+        color = 'yellow'
+    elif (name == '#ff00ff'):
+        color = 'pink'
+    elif (name == '#0000ff'):
+        color= 'light blue'
+    elif (name == '#00ffff'):
+        color= 'turquoise'
     else:
-        color = '#000000'
+        color = 'black'
     return color
 
 def save_image(im, foldersavename, ndpviewstate):
@@ -46,21 +44,22 @@ def save_image(im, foldersavename, ndpviewstate):
     foldersavename: string with absolute folder name.
     ndpviewstate: Ndpviewstate instance
     """
-    foldersavenamecolor = foldersavename+ '/' + ndpviewstate.annotation.color
+    foldersavenamecolor = foldersavename+ '/' + color(ndpviewstate.annotation.color)
     try:
         os.mkdir(foldersavenamecolor)
     except:
         pass
-    if (not(os.path.exists(foldersavenamecolor + '/' + ndpviewstate.title + '.jpg'))):
-        filesavename =foldersavenamecolor + '/' + ndpviewstate.title + '.jpg'
+    if (not(os.path.exists(foldersavenamecolor + '/' + ndpviewstate.title + '.bmp'))):
+        filesavename =foldersavenamecolor + '/' + ndpviewstate.title + '.bmp'
     else:
         i=1
         while (os.path.exists(foldersavenamecolor + '/' + 
                               ndpviewstate.title + 
-                              '(' + str(i) + ')' + '.jpg')):
+                              '(' + str(i) + ')' + '.bmp')):
             i+=1
-        filesavename = foldersavenamecolor + '/' + ndpviewstate.title+ '(' + str(i) + ')' + '.jpg'
-    im.save(filesavename, "JPEG")
+        filesavename = foldersavenamecolor + '/' + ndpviewstate.title+ '(' + str(i) + ')' + '.bmp'
+    im.save(filesavename, "BMP")
+    return filesavename
 
 def remove_extension(filename):
     """ return the file name without the extension
@@ -81,7 +80,7 @@ def create_folder(filename):
         pass # raise IOError('File not found') - file not found? is trying to create a directory
     return foldersavename
 
-def exclude_rni(imroi, roicenter, roiwidth, roiheight, imrni, rnicenter, rniwidth, rniheight):
+def exclude_rni(imroi, roicenter, roiwidth, roiheight, imrni, rnicenter, rniwidth, rniheight, magnification, hamaimage):
     """ remove the region of not-interest
     Arguments:
     imroi: PIL image with the region of interest (ROI)
@@ -93,11 +92,11 @@ def exclude_rni(imroi, roicenter, roiwidth, roiheight, imrni, rnicenter, rniwidt
     rniwidth: float with the physical of the RONI
     rniheight: float with the physical of the RONI
     """
-    physicaloffset = ( rnicenter.x-roicenter.x+(roiwidth - rniwidth)/2,
-                       rnicenter.y-roicenter.y+(roiheight - rniheight)/2 )
+    physicaloffset = ( (rnicenter.x-rniwidth/2.0)-(roicenter.x- roiwidth/2.0),
+                       (rnicenter.y-rniheight/2.0)-(roicenter.y - roiheight/2.0) )
     pixoffset = []
     for item in physicaloffset:
-        pixoffset.append(int(20*item/CONV_FACT))
+        pixoffset.append(int(magnification*item/hamaimage.CONV_FACT))
     pixrni = imrni.load()
     pixroi = imroi.load()
     for x in range(0, imrni.size[0]):
@@ -109,8 +108,9 @@ if __name__ == '__main__':
     interface = Interface()
     interface.configure_traits()
     filename = interface.filename
-    roi = color(interface.roi)
-    rni = color(interface.roni)
+    roi = interface.roi
+    rni = interface.roni
+    magnification = int(interface.magnification)
     
     if filename == "":
         raise IOError('File not found')
@@ -128,20 +128,33 @@ if __name__ == '__main__':
         
         ndpifilename = remove_extension(filename)
         foldersavename = create_folder(filename)
+        hamaimage = HamamatsuImage(ndpifilename)
         
         for ndpviewstate in ndpviewstates:
-            if (ndpviewstate.annotation.color == roi):
-                imroi = ndpviewstate.image(ndpifilename)
+            if (color(ndpviewstate.annotation.color) == roi):
+                imroi = ndpviewstate.image(ndpifilename, magnification)
                 roicenter, roiwidth, roiheight = ndpviewstate.annotation.center_size()
                 roicorner = (roicenter.x-roiwidth/2, roicenter.x+roiwidth/2, 
                              roicenter.y-roiheight/2, roicenter.y+roiheight/2)
                 for other_ndpviewstate in ndpviewstates:
-                    if (other_ndpviewstate.annotation.color == rni):
+                    if (color(other_ndpviewstate.annotation.color) == rni):
                         rnicenter, rniwidth, rniheight = other_ndpviewstate.annotation.center_size()
                         if (rnicenter.x>=roicorner[0] and rnicenter.x<=roicorner[1] and
                             rnicenter.y>=roicorner[2] and rnicenter.y<=roicorner[3]):
-                            imrni = other_ndpviewstate.image(ndpifilename)
-                            exclude_rni(imroi, roicenter, roiwidth, roiheight, imrni, rnicenter, rniwidth, rniheight)
+                            imrni = other_ndpviewstate.image(ndpifilename, magnification)
+                            exclude_rni(imroi, roicenter, roiwidth, roiheight, imrni, rnicenter, rniwidth, rniheight, magnification, hamaimage)
                             save_image(imrni, foldersavename, other_ndpviewstate)
                 
+                if (imroi.size[0]<2000):
+                    if (imroi.size[1]<2000):
+                        newim= new('RGB', (2000, 2000), (255,255,255))
+                        newim.paste(imroi, (1000-imroi.size[0]/2.0,1000-imroi.size[1]/2.0)) 
+                    else:
+                        newim= new('RGB', (2000, imroi.size[1]), (255,255,255))
+                        newim.paste(imroi, (1000-imroi.size[0]/2.0,0))
+                    imroi = newim
+                elif (imroi.size[1]<2000):
+                    newim= new('RGB', (imroi.size[0], 2000), (255,255,255))
+                    newim.paste(imroi, (0,1000-imroi.size[1]/2.0)) 
+                    imroi = newim        
                 save_image(imroi, foldersavename, ndpviewstate)

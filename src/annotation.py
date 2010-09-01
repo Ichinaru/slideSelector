@@ -7,7 +7,6 @@ Created on 9 août 2010
 
 from point import Point
 from Hamamatsu import *
-from math import *
 from Image import *
 import ImageDraw
 
@@ -39,9 +38,9 @@ class CircularAnnotation(Annotation):
         center : Point
         radius : float
         """
-        super(CirclularAnnotation, self).__init__(**kwargs)
-        self.center = kwargs['center']
-        self.radius = kwargs['radius']
+        super(CircularAnnotation, self).__init__(**kwargs)
+        self.center = kwargs.get('center')
+        self.radius = kwargs.get('radius')
     
     def set_element(self, xmlannotation):
         """Arguments:
@@ -109,10 +108,10 @@ class FreehandAnnotation(Annotation):
         xmax = max(self.x)
         ymax = max(self.y)
         ymin = min(self.y)
-        center = Point((xmax+xmin)/2, (ymax+ymin)/2)
+        center = Point(int((xmax+xmin)/2.0), (ymax+ymin)/2.0)
         return center, xmax-xmin, ymax-ymin
     
-    def contour(self, im, lens):
+    def contour(self, im, lens, hamaimage):
         """ set pixels outside the contour to white 
         Arguments:
         im : PIL image from HamamatsuImage
@@ -120,7 +119,7 @@ class FreehandAnnotation(Annotation):
         """
         if (self.displayname != 'Rectangular Annotation'):
             draw = ImageDraw.Draw(im)
-            lines = self.__contour_lines(lens)
+            lines = self.__contour_lines(lens, hamaimage)
             draw.line(lines , fill=(255, 255, 255))
             blackborderim = self.__border_lines(im, (0, 0, 0))
             whiteborderim= self.__border_lines(blackborderim, (255, 255, 255))
@@ -139,7 +138,7 @@ class FreehandAnnotation(Annotation):
         newim.paste(im, (1,1))
         return newim
     
-    def __contour_lines(self, lens):
+    def __contour_lines(self, lens, hamaimage):
         """ take the lines contour in nm and return the lines contour in pixels
         Arguments:
         lens: float with the lens of the image
@@ -148,12 +147,12 @@ class FreehandAnnotation(Annotation):
         xmin = min(self.x)
         ymin = min(self.y)
         for i in range (0, len(self.x)):
-            xpix = (self.x[i]-xmin)*lens/CONV_FACT
-            ypix = (self.y[i]-ymin)*lens/CONV_FACT
-            lines.append((int(xpix), int(ypix)))
-        xpix = (self.x[0]-xmin)*lens/CONV_FACT
-        ypix = (self.y[0]-ymin)*lens/CONV_FACT
-        lines.append((int(xpix), int(ypix)))
+            xpix = (self.x[i]-xmin)*lens/hamaimage.CONV_FACT
+            ypix = (self.y[i]-ymin)*lens/hamaimage.CONV_FACT
+            lines.append((round(xpix), round(ypix)))
+        xpix = (self.x[0]-xmin)*lens/hamaimage.CONV_FACT
+        ypix = (self.y[0]-ymin)*lens/hamaimage.CONV_FACT
+        lines.append((round(xpix), round(ypix)))
         return lines
     
     def __check_west_or_east_side(self, pix, initpoint, direction):

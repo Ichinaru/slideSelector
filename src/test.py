@@ -7,17 +7,14 @@ Created on 17 août 2010
 from annotation import *
 from lxml import etree
 from ndpviewstate import *
-from point import *
 from Hamamatsu import *
-from math import *
-from Image import *
 from slideSelector import *
 import ImageDraw
 
 filename = ("C:/Documents and Settings/Administrator/My Documents/Python/SlideSelector/res/09H00132_KI67.ndpi.ndpa")
-roi = color('red')
+roi = 'red'
 
-colors = (color('green'), color('light blue'))
+colors = ('green', 'light blue')
 
 for rni in colors:
 
@@ -35,7 +32,7 @@ for rni in colors:
     foldersavename = create_folder(filename)
     
     for ndpviewstate in ndpviewstates:
-        if (ndpviewstate.annotation.color == roi):
+        if (color(ndpviewstate.annotation.color) == roi):
             # get the image
             imroi = ndpviewstate.image(ndpifilename)
             roicenter, roiwidth, roiheight = ndpviewstate.annotation.center_size()
@@ -43,7 +40,7 @@ for rni in colors:
                          roicenter.y-roiheight/2, roicenter.y+roiheight/2)
             # remove rni of roi
             for other_ndpviewstate in ndpviewstates:
-                if (other_ndpviewstate.annotation.color == rni):
+                if (color(other_ndpviewstate.annotation.color) == rni):
                     rnicenter, rniwidth, rniheight = other_ndpviewstate.annotation.center_size()
                     if (rnicenter.x>=roicorner[0] and rnicenter.x<=roicorner[1] and
                         rnicenter.y>=roicorner[2] and rnicenter.y<=roicorner[3]):

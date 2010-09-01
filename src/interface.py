@@ -21,6 +21,10 @@ class Interface(HasTraits):
         desc="",
         label="region a exclure", )
     
+    magnification = Enum('5', '10', '20' , '40',
+        desc="",
+        label="magnification", )
+    
     filename =  File()
 
-    view = View('roi', 'rni', Item('filename', show_label=False ), buttons = [OKButton, CancelButton])
+    view = View('roi', 'roni', 'magnification', Item('filename', show_label=False ), buttons = [OKButton, CancelButton])
