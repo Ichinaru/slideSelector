@@ -30,6 +30,7 @@ class TestHamamatsuImage(unittest.TestCase):
     def test_get_image_data(self):
         h_im = nread.HamamatsuImage(filename)
         im = h_im.GetImageData(1440,900,20558705,-403075,0,0.539467)
+        im.show()
 
     def test_get_image_info(self):
         h_im = nread.HamamatsuImage(filename)

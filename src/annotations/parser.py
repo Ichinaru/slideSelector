@@ -64,8 +64,20 @@ class FreehandAnnotation(Annotation):
         point_list_px = empty(shape=(sz+1,2))
         for i in xrange(sz+1):
             point_list_px[i,0] = (self.point_list[i%sz,0] - self.xmin)*mag/cv
-            point_list_px[i,1] = (self.point_list[i%sz,1] - self.xmin)*mag/cv
+            point_list_px[i,1] = (self.point_list[i%sz,1] - self.ymin)*mag/cv
         return point_list_px
+
+    def get_enclosing_rectangle_px(self, mag, cv):
+        pl = self.get_point_list_px(mag, cv)
+        xmax = pl[:,0].max()
+        xmin = pl[:,0].min()
+        ymax = pl[:,1].max()
+        ymin = pl[:,1].min()
+        x = int((xmax+xmin)/2.0)
+        y = int((ymax+ymin)/2.0)
+        width = xmax - xmin
+        height = ymax - ymin
+        return x, y, width, height
 
 def get_annotation_list(filename):
     """Return an lxml etree. The root of it is on the ndpviewstate."""

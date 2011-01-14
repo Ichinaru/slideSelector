@@ -132,6 +132,8 @@ class HamamatsuImage:
         z_plan: long with the physical Z (focal) pos of the desired image in nm.
         magnification: long with the objective magnification.
         """
+        frame_width = long(round(frame_width/4.)*4)
+        frame_height = long(round(frame_height/4.)*4)
         i_pBuffer = c_void_p()
         i_nPhysicalXPos = x_center
         i_nPhysicalYPos = y_center
@@ -157,7 +159,7 @@ class HamamatsuImage:
 
         return Image.frombuffer("RGB",(frame_width,frame_height),i_pBuffer,"raw","BGR",0,-1)
 
-    def GetImageNm2D(self,width, height,x_coord,y_coord, magnification):
+    def GetImageNm2D(self,width, height,x_coord,y_coord, magnification, size_offset=0):
         """Return the image given the positions and extent in pixels. Works with 2D images.
 
         Arguments:
@@ -168,8 +170,8 @@ class HamamatsuImage:
         magnification: long with the objective magnification.
         size_offset: int: how many pixels more in height and width
         """
-        frame_width = int(round(1.0*magnification*width/self.CONV_FACT)+1)
-        frame_height = int(round(1.0*magnification*height/self.CONV_FACT)+1)
+        frame_width = int(round(1.0*magnification*width/self.CONV_FACT)+1+size_offset)
+        frame_height = int(round(1.0*magnification*height/self.CONV_FACT)+1+size_offset)
         return self.GetImageData(frame_width, frame_height, x_coord, y_coord, 0, magnification)
 
     def GetImagePx2D(self,width, height,x_coord_px,y_coord_px, magnification):
@@ -183,6 +185,8 @@ class HamamatsuImage:
         magnification: long with the objective magnification.
         """
         im_info = self.GetMapInfo()
+        width = int(width)
+        height = int(height)
 
         # x_orig = physical_x - (physical_width/2.0)
         x_orig = im_info[2] - (im_info[0]/2.0)
