@@ -11,6 +11,7 @@ import os.path as osp
 import Image, ImageDraw
 from .annotations import get_annotation_list
 from .hamamatsu import HamamatsuImage
+from .hamamatsu.pyNDPRead import hama
 from .custom_errors import CanNotWriteDirectoryError
 
 class BaseExporter(object):
@@ -33,6 +34,7 @@ class BaseExporter(object):
             x, y, width, height = annotation.get_enclosing_rectangle()
             rectangle = h_im.GetImageNm2D(width, height, x, y, self.mag)
             rectangle.show()
+            hama.CleanUp()
             self.flood_fill(rectangle, annotation)
             self.safe_save(rectangle, annotation.title)
 
